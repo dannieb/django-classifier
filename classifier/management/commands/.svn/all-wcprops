@@ -1,0 +1,41 @@
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/y12sitesvndev/!svn/ver/1926/localdeals/classifier/management/commands
+END
+classifier_groupon.py
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/y12sitesvndev/!svn/ver/1590/localdeals/classifier/management/commands/classifier_groupon.py
+END
+classifier_verifyclassifier.py
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/y12sitesvndev/!svn/ver/1543/localdeals/classifier/management/commands/classifier_verifyclassifier.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/y12sitesvndev/!svn/ver/1543/localdeals/classifier/management/commands/__init__.py
+END
+classifier_retrainall.py
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/y12sitesvndev/!svn/ver/1543/localdeals/classifier/management/commands/classifier_retrainall.py
+END
+classifier_groupon_tasks.py
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/y12sitesvndev/!svn/ver/1926/localdeals/classifier/management/commands/classifier_groupon_tasks.py
+END
+classifier_ls_tasks.py
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/y12sitesvndev/!svn/ver/1595/localdeals/classifier/management/commands/classifier_ls_tasks.py
+END

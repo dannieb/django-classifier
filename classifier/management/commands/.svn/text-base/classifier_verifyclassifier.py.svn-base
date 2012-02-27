@@ -1,0 +1,55 @@
+'''
+Created on Dec 3, 2010
+
+@author: dannieb
+'''
+from classifier.classifiers import Classifier
+from django.core.management.base import NoArgsCommand
+from localdeals.models import LocalDeal
+class Command(NoArgsCommand):
+    
+    help = ''' Retrains the classification system again.  Important when we make changes to the classifying rules'''
+
+    def handle_noargs(self, **options):       
+        classifier = Classifier()
+        #get all the deals in the system that have tags associated with it
+        maxProcess = 500
+        
+        
+        
+        pageNumber = 1
+        pageSize = 100
+        
+        numSuccess = 0
+        numRun = 0
+        
+        while(True) :
+            deals = LocalDeal.getAllDealsWithTags(pageNumber, pageSize)
+            if not deals :
+                break
+            
+            for deal in deals :
+                numRun += 1
+                
+                corpus = deal.dealTitle + " " + deal.dealDetails
+                actualTags = deal.getAllTags()
+                classifiedTags = classifier.classify(corpus)
+                numMatches = 0
+                for tagName in classifiedTags :
+                    for tag in actualTags :
+                        if tag.name == tagName : 
+                            numMatches += 1
+                if numMatches == len(classifiedTags) :
+                    numSuccess += 1
+                    
+                    
+        
+        print "Ran through: " + str(numRun) + " deals/n"
+        print "Number of success: " + str(numSuccess) + "/n"
+        print "Success percentage: " + str( ( float(numSuccess) / numRun) * 100 )+ "%" 
+                
+        
+        
+        
+
+    

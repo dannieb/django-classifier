@@ -1,0 +1,17 @@
+'''
+Created on Dec 7, 2010
+
+@author: dannieb
+'''
+from classifier.groupon import GrouponClassifier
+from django.core.management.base import NoArgsCommand
+class Command(NoArgsCommand):
+    
+    help = ''' Retrains the classification system again.  Important when we make changes to the classifying rules'''
+
+    def handle_noargs(self, **options):       
+        GrouponClassifier().classify()
+        
+        
+
+    

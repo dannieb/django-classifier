@@ -1,0 +1,41 @@
+'''
+Created on Dec 10, 2010
+
+@author: dannieb
+'''
+from classifier.livingsocial import LivingSocialClassifier
+from django.core.management.base import BaseCommand
+from optparse import make_option
+
+class Command(BaseCommand):
+    help = ''' Living social-related classification tasks'''
+    __doc__ = help
+    option_list = BaseCommand.option_list + (
+        make_option('--load_corpa', dest='load_corpa',
+                    default=False, help='Loads the living social corpa'),      
+        make_option('--classify', dest='classify',
+                    default=False, help='Classifies'),
+        make_option('--cleanup', dest='cleanup',
+                    default=False, help='Cleanup'),
+
+    )
+    
+    __verbose = False
+
+    def handle(self, *args, **options):
+        livingSocialClassifier = LivingSocialClassifier()
+        
+        if options['load_corpa'] :
+            #Loads the living social test corpa  
+            livingSocialClassifier.loadTestCorpa()
+        if options['classify'] :
+            #Classifies all the living social deals
+            livingSocialClassifier.classify()
+        if options['cleanup'] :
+            #Classifies all the living social deals
+            livingSocialClassifier.cleanup()
+        
+        
+        
+    
+        
