@@ -141,14 +141,6 @@ class BayesianClassifier(Classifier):
                 prob *= ((weight * ap) + (totals * basicProb)) / (weight + totals)
     
         return prob
-    
-    def __invchi2(self, chi, df) :
-        m = chi/2.0
-        sum = term = math.exp(-m)
-        for i in range(1, df//2) :
-            term *= m / i
-            sum += term
-        return min(sum, 1.0)
 
 '''
 This index is purely for performance reasons.  When the classifier starts, it loads all the classification
