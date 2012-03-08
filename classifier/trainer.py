@@ -21,7 +21,7 @@ Deal Trainer.
 '''
 class Trainer(object):
 
-    MAX_FEATURES = 240
+    MAX_FEATURES = 500
     categories = {}
     
     def __init__(self):
@@ -63,7 +63,7 @@ class Trainer(object):
         return isNumeric
 
     '''
-    Given a list of yes category names, retreives the yes/no category hash that the trainer needs
+    Given a list of yes category names, retrieves the yes/no category hash that the trainer needs
     '''
     def __getCategoriesFromNames(self, yesTagNames, noTagNames):
         finalCategories = []

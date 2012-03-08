@@ -8,16 +8,17 @@ from classifier.models import ClassifierCategory, Document, \
 from classifier.trainer import Trainer
 from json.decoder import JSONDecoder
 import logging
+import math
 
 class Classifier(object):
     trainer = Trainer()
     
-    def __init__(self, threshold=.5):
-        self.threshold = threshold
+    def __init__(self):
         self.savedCategories = None
         self._corpus = ""
         self._features = []
         self._classifierIndex = None
+        self._mins = {}
     
     def _getCorpusShort(self):
         return self._corpus[:50] if self._corpus else ""
@@ -33,8 +34,18 @@ class Classifier(object):
     def getFeatures(self, corpus):
         return self.trainer.getFeatures(corpus)
     
+    def setMinThreshold(self, categoryName, yes, value):
+        if not self._mins.get(categoryName) :
+            self._mins[categoryName] = {}
+        self._mins[categoryName][yes] = value
+        
+    def getMinThreshold(self, categoryName, yes):
+        return self._mins.get(categoryName, {}).get(yes, .6)
+        
     '''
-    Generic classification
+    Generic classification.
+    Optionally pass in the list of tagNames you want to specifically
+    focus on.  
     '''
     def classify(self, corpus):
         self._corpus = corpus
@@ -43,7 +54,10 @@ class Classifier(object):
     
         # Find the category with the highest probability
         logger = logging.getLogger("Classifier.classify")
-        groupedCategories = self._getGroupedCategories(ClassifierCategory.getAllCategories())
+        
+        categories = ClassifierCategory.getAllCategories()
+        
+        groupedCategories = self._getGroupedCategories(categories)
         probableTags = []
         try :
             probableTags = self._getProbableTags(groupedCategories)
@@ -61,14 +75,13 @@ class Classifier(object):
             yesProb = self._getProb(groupedCategories[tagName], True)
             noProb = self._getProb(groupedCategories[tagName], False)
             
-            dilutedYesProb = yesProb * self.threshold
-            if dilutedYesProb > noProb :
-                probableTags.append(tagName)
+            if math.log(yesProb/noProb) > 0 :
+                probableTags.append(tagName + " - YES")
+            else :
+                probableTags.append(tagName + " - NO")
                 
-                yesCategory = groupedCategories[tagName][True]
-                numDocsForCategory = self._classifierIndex.getNumDocumentsForCategory(yesCategory)
-                logger.info("YES %s: %s NO:%s [Final Yes]:%s - sample:%s" % (tagName, str(yesProb), str(noProb), str(dilutedYesProb), str(numDocsForCategory)))
-    
+            logger.info("Tag:%s = %s v %s" % (tagName, str(yesProb), str(noProb)))
+                
         return probableTags
     
     def __getTagsText(self, tags):
@@ -90,9 +103,10 @@ class BayesianClassifier(Classifier):
         self.threshold = threshold
     
     def _getProb(self, categoryYesNo, yes):
-        category = categoryYesNo[yes]
         # Ratio of given category in the trainer database.
-        catprob = float(self._classifierIndex.getNumDocumentsForCategory(category)) / float(self._classifierIndex.getNumberOfDocuments())
+        numDocumentsYes = self._classifierIndex.getNumDocumentsForCategory(categoryYesNo[yes])
+        
+        catprob = float(numDocumentsYes)
         # Probably of given doc being in the given category.
         docprob = self.__getDocumentProb(categoryYesNo, yes)
         return docprob * catprob
@@ -101,6 +115,7 @@ class BayesianClassifier(Classifier):
     def __getDocumentProb(self, categoryYesNo, yes):
         # Multiply the probabilities of all the features together
         category = categoryYesNo[yes]
+        notCategory = categoryYesNo[not yes]
         prob = 0
         numDocumentsForCategory = self._classifierIndex.getNumDocumentsForCategory(category)
         
@@ -112,14 +127,28 @@ class BayesianClassifier(Classifier):
                 
                 featureCategoryCount = self._classifierIndex.getFeatureCategoryCount(feature, category)
                 basicProb = float(featureCategoryCount) / float(numDocumentsForCategory)
+                
+                if basicProb > 0 :
+                    featureCategoryCount2 = self._classifierIndex.getFeatureCategoryCount(feature, notCategory)
+                    freqSum = basicProb + (float(featureCategoryCount2/float(numDocumentsForCategory)))
+                    basicProb = basicProb/freqSum
+                    
                 # Count the number of times this feature has appeared in
                 # all categories
                 totals = self._classifierIndex.getTotalFeatureCount(feature, categoryYesNo.values())
                 
                 # Calculate the weighted average
                 prob *= ((weight * ap) + (totals * basicProb)) / (weight + totals)
-        
+    
         return prob
+    
+    def __invchi2(self, chi, df) :
+        m = chi/2.0
+        sum = term = math.exp(-m)
+        for i in range(1, df//2) :
+            term *= m / i
+            sum += term
+        return min(sum, 1.0)
 
 '''
 This index is purely for performance reasons.  When the classifier starts, it loads all the classification
