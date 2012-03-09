@@ -74,8 +74,11 @@ class Classifier(object):
         for tagName in groupedCategories :
             yesProb = self._getProb(groupedCategories[tagName], True)
             noProb = self._getProb(groupedCategories[tagName], False)
-            
-            if math.log(yesProb/noProb) > 0 :
+                
+            yesMin = self.getMinThreshold(tagName, True)
+            noMin = self.getMinThreshold(tagName, False)
+    
+            if self._isYesNo(yesProb, noProb, yesMin, noMin) :
                 probableTags.append(tagName + " - YES")
             else :
                 probableTags.append(tagName + " - NO")
@@ -90,9 +93,6 @@ class Classifier(object):
             tagText += tag.categoryName + ", "
         return tagText
     
-    @staticmethod
-    def getClassifier():
-        return BayesianClassifier()
 '''
 Classification using bayes
 '''
@@ -101,6 +101,10 @@ class BayesianClassifier(Classifier):
     def __init__(self, threshold=0.1):
         super(BayesianClassifier, self).__init__()
         self.threshold = threshold
+    
+    def _isYesNo(self, yesProb, noProb, yesMin=0, noMin=0):
+        return math.log(yesProb/noProb) > 0
+       
     
     def _getProb(self, categoryYesNo, yes):
         # Ratio of given category in the trainer database.
@@ -113,6 +117,45 @@ class BayesianClassifier(Classifier):
     
     ''' Probablity that given document is in the given category. '''
     def __getDocumentProb(self, categoryYesNo, yes):
+        # Multiply the probabilities of all the features together
+        category = categoryYesNo[yes]
+        prob = 0
+        numDocumentsForCategory = self._classifierIndex.getNumDocumentsForCategory(category)
+        
+        if numDocumentsForCategory > 0 :
+            prob = 1
+            for feature in self._features : 
+                weight = 1
+                ap = 0.5
+                
+                featureCategoryCount = self._classifierIndex.getFeatureCategoryCount(feature, category)
+                basicProb = float(featureCategoryCount) / float(numDocumentsForCategory)
+                
+                # Count the number of times this feature has appeared in
+                # all categories
+                totals = self._classifierIndex.getTotalFeatureCount(feature, categoryYesNo.values())
+                
+                # Calculate the weighted average
+                prob *= ((weight * ap) + (totals * basicProb)) / (weight + totals)
+    
+        return prob
+    
+class FisherBayesClassifier(Classifier):
+    
+    def __init__(self, threshold=0.1):
+        super(FisherBayesClassifier, self).__init__()
+        self.threshold = threshold
+    
+    def _isYesNo(self, yesProb, noProb, yesMin=0, noMin=0):
+        isYes = False
+        if yesProb > yesMin :
+            isYes = True
+        if noProb > noMin and noProb > yesProb:
+            isYes = False
+        return isYes
+    
+    
+    def _getProb(self, categoryYesNo, yes):
         # Multiply the probabilities of all the features together
         category = categoryYesNo[yes]
         notCategory = categoryYesNo[not yes]
@@ -140,7 +183,20 @@ class BayesianClassifier(Classifier):
                 # Calculate the weighted average
                 prob *= ((weight * ap) + (totals * basicProb)) / (weight + totals)
     
+    
+        if prob > 0 :
+            prob = self.__invchi2(-2*math.log(prob), len(self._features) * 2)
+    
         return prob
+        
+    
+    def __invchi2(self, chi, df) :
+        m = chi/2.0
+        sum = term = math.exp(-m)
+        for i in range(1, df//2) :
+            term *= m / i
+            sum += term
+        return min(sum, 1.0)
 
 '''
 This index is purely for performance reasons.  When the classifier starts, it loads all the classification
