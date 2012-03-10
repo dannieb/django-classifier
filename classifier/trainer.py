@@ -35,7 +35,7 @@ class Trainer(object):
         stemmer = PorterStemmer()
         stems = FreqDist()
         corpus = TreebankWordTokenizer().tokenize(corpus)
-        onlyLettersNumbers = re.compile('[^a-zA-Z]')
+        onlyLettersNumbers = re.compile('[^a-zA-Z0-9%!]')
         onespace = re.compile('\s+')
         
         count = 0

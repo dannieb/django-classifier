@@ -79,9 +79,9 @@ class Classifier(object):
             noMin = self.getMinThreshold(tagName, False)
     
             if self._isYesNo(yesProb, noProb, yesMin, noMin) :
-                probableTags.append(tagName + " - YES")
+                probableTags.append((tagName, True))
             else :
-                probableTags.append(tagName + " - NO")
+                probableTags.append((tagName, False))
                 
             logger.info("Tag:%s = %s v %s" % (tagName, str(yesProb), str(noProb)))
                 
