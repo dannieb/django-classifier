@@ -3,7 +3,7 @@ Created on Feb 10, 2012
 
 @author: Dannie
 '''
-from classifier.classifiers import Classifier
+from classifier.classifiers import Classifier, FisherBayesClassifier
 from classifier.trainer import Trainer
 from django.core.management.base import BaseCommand
 from optparse import make_option
@@ -88,7 +88,7 @@ class Command(BaseCommand):
         
     
     def __classify(self, corpus, directory):
-        classifier = Classifier.getClassifier()
+        classifier = FisherBayesClassifier()
      
         tags = classifier.classify(corpus)
         for tag in tags :

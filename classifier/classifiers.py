@@ -43,9 +43,7 @@ class Classifier(object):
         return self._mins.get(categoryName, {}).get(yes, .6)
         
     '''
-    Generic classification.
-    Optionally pass in the list of tagNames you want to specifically
-    focus on.  
+    Classification of text corpus
     '''
     def classify(self, corpus):
         self._corpus = corpus
