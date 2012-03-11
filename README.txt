@@ -1,11 +1,13 @@
-This is a general purpose text classifier.
-The only implementation provided is a Naive Bayes Classifier (http://en.wikipedia.org/wiki/Naive_Bayes_classifier)
+This is a general purpose text classifier for django.
+
+Two implementations are provided:
+1.) FisherBayesClassifier and BayesianClassifier
 
 The classifier can classify any number of categories.
 
 
 INSTALLATION:
-Just run [setup.py install]
+[setup.py install]
 
 
 USAGE:

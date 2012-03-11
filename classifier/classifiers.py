@@ -96,9 +96,8 @@ Classification using bayes
 '''
 class BayesianClassifier(Classifier):
     
-    def __init__(self, threshold=0.1):
+    def __init__(self):
         super(BayesianClassifier, self).__init__()
-        self.threshold = threshold
     
     def _isYesNo(self, yesProb, noProb, yesMin=0, noMin=0):
         return math.log(yesProb/noProb) > 0
@@ -138,11 +137,13 @@ class BayesianClassifier(Classifier):
     
         return prob
     
+'''
+Passing in minimum probabilities will effect the classification.
+'''
 class FisherBayesClassifier(Classifier):
     
-    def __init__(self, threshold=0.1):
+    def __init__(self):
         super(FisherBayesClassifier, self).__init__()
-        self.threshold = threshold
     
     def _isYesNo(self, yesProb, noProb, yesMin=0, noMin=0):
         isYes = False
