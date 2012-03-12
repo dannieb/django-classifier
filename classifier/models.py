@@ -77,7 +77,6 @@ class Document(models.Model):
 
     def save(self, *args, **kwargs):
         if self.corpus :
-            self.corpus = self.corpus.encode("utf-8", "ignore")
             self.corpusHash = Document.getHash(self.corpus)
             
         return super(Document, self).save(*args, **kwargs)
@@ -87,7 +86,6 @@ class Document(models.Model):
     '''
     @staticmethod
     def getDocumentByCorpus(corpus, create=False):
-        corpus = corpus.encode("utf-8", 'ignore')
         corpusHash = Document.getHash(corpus)
         documents = Document.objects.filter(corpusHash=corpusHash)
         

@@ -20,13 +20,13 @@ import re
 Deal Trainer.
 '''
 class Trainer(object):
-
-    MAX_FEATURES = 500
+    
     categories = {}
     
-    def __init__(self):
+    def __init__(self, maxFeatures=-1):
         self._jsonDecoder = JSONDecoder()
         self._jsonEncoder = JSONEncoder()
+        self.__maxFeatures = maxFeatures
     
     '''
     Given a corpus of text, returns the features
@@ -34,18 +34,16 @@ class Trainer(object):
     def getFeatures(self, corpus):
         stemmer = PorterStemmer()
         stems = FreqDist()
-        corpus = TreebankWordTokenizer().tokenize(corpus)
         onlyLettersNumbers = re.compile('[^a-zA-Z0-9%!]')
-        onespace = re.compile('\s+')
+        corpus = onlyLettersNumbers.sub(' ', corpus.lower())
+        corpus = TreebankWordTokenizer().tokenize(corpus)
         
         count = 0
         for word in corpus :
-            word = onlyLettersNumbers.sub(' ', word.lower())
-            word = onespace.sub(' ', word).strip()
-            if not stopwords.STOP_WORDS.get(word) and len(word) > 1 :
+            if not stopwords.STOP_WORDS.get(word) and len(word.strip()) > 1 :
                 stems.inc(stemmer.stem_word(word))
                 count += 1
-                if count >= self.MAX_FEATURES :
+                if self.__maxFeatures > 0 and count >= self.__maxFeatures :
                     break
                 
         features = stems.samples()
@@ -132,6 +130,7 @@ class Trainer(object):
                 success = True
     
         except Exception, ex :
+            logger.info("Bad data:%s" % corpus)
             logger.exception("Failed to save the trained data: " + str(ex))
             transaction.rollback()
         
