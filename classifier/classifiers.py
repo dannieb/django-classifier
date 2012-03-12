@@ -3,15 +3,14 @@ Created on Feb 10, 2012
 
 @author: Dannie
 '''
+from classifier import FeatureExtractor
 from classifier.models import ClassifierCategory, Document, \
     CategoryDocumentCountIndex, FeatureCounts
-from classifier.trainer import Trainer
 from json.decoder import JSONDecoder
 import logging
 import math
 
 class Classifier(object):
-    trainer = Trainer()
     
     def __init__(self):
         self.savedCategories = None
@@ -19,6 +18,7 @@ class Classifier(object):
         self._features = []
         self._classifierIndex = None
         self._mins = {}
+        self.__featureExtractor = FeatureExtractor()
     
     def _getCorpusShort(self):
         return self._corpus[:50] if self._corpus else ""
@@ -31,8 +31,8 @@ class Classifier(object):
             groupedCategories[category.categoryName][category.yes] = category 
         return groupedCategories
     
-    def getFeatures(self, corpus):
-        return self.trainer.getFeatures(corpus)
+    def setFeatureExtractor(self, featureExtractor):
+        self.__featureExtractor = featureExtractor
     
     def setMinThreshold(self, categoryName, yes, value):
         if not self._mins.get(categoryName) :
@@ -47,7 +47,7 @@ class Classifier(object):
     '''
     def classify(self, corpus):
         self._corpus = corpus
-        self._features = self.getFeatures(corpus)
+        self._features = self.__featureExtractor.getFeatures(corpus)
         self._classifierIndex = ClassifierIndex(self._features)
     
         # Find the category with the highest probability

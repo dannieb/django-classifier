@@ -3,18 +3,13 @@ Created on Feb 10, 2012
 
 @author: Dannie
 '''
-from classifier import stopwords
+from classifier import FeatureExtractor
 from classifier.models import ClassifierCategory, Document, FeatureCounts, \
     DocumentCategoryCounts, CategoryDocumentCountIndex
 from django.db import transaction
 from json.decoder import JSONDecoder
 from json.encoder import JSONEncoder
-from nltk.probability import FreqDist
-from nltk.stem.porter import PorterStemmer
-from nltk.tokenize.treebank import TreebankWordTokenizer
 import logging
-import re
-
 
 '''
 Deal Trainer.
@@ -23,32 +18,13 @@ class Trainer(object):
     
     categories = {}
     
-    def __init__(self, maxFeatures=-1):
+    def __init__(self):
         self._jsonDecoder = JSONDecoder()
         self._jsonEncoder = JSONEncoder()
-        self.__maxFeatures = maxFeatures
+        self.__featureExtractor = FeatureExtractor()
     
-    '''
-    Given a corpus of text, returns the features
-    '''
-    def getFeatures(self, corpus):
-        stemmer = PorterStemmer()
-        stems = FreqDist()
-        onlyLettersNumbers = re.compile('[^a-zA-Z0-9%!]')
-        corpus = onlyLettersNumbers.sub(' ', corpus.lower())
-        corpus = TreebankWordTokenizer().tokenize(corpus)
-        
-        count = 0
-        for word in corpus :
-            if not stopwords.STOP_WORDS.get(word) and len(word.strip()) > 1 :
-                stems.inc(stemmer.stem_word(word))
-                count += 1
-                if self.__maxFeatures > 0 and count >= self.__maxFeatures :
-                    break
-                
-        features = stems.samples()
-        
-        return features
+    def setFeatureExtractor(self, featureExtractor):
+        self.__featuredExtractor = featureExtractor
         
         
     def __isNumeric(self, feature):
@@ -94,7 +70,7 @@ class Trainer(object):
         try :
             document = Document.getDocumentByCorpus(corpus)
             if not document :
-                features = self.getFeatures(corpus)
+                features = self.__featuredExtractor.getFeatures(corpus)
                 categories = self.__getCategoriesFromNames(yesTagNames, noTagNames)
 
                 document = Document(corpus=corpus)
@@ -166,7 +142,7 @@ class Trainer(object):
             
             if document :
                 categories = DocumentCategoryCounts.getCategoriesForDocument(document)
-                features = self.getFeatures(corpus)
+                features = self.__featuredExtractor.getFeatures(corpus)
                 document.delete()
                 
                 for feature in features :
